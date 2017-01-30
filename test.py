@@ -49,7 +49,7 @@ def active_subspace_from_hessian(hessian):
 
 def eig_hessian(catchment = 'Hessian-based/Gingera/',
                t_year = '70s', no_seed='2025', size_pert = '1e-06'):
-    sys.path.append('C:/UserData/seol/Sensitivity Analyses/IHACRES/AS/')
+#    sys.path.append('C:/UserData/seol/Sensitivity Analyses/IHACRES/AS/')
     
     data_dir = catchment+'/'+t_year+'/seed-'+no_seed+'/'+size_pert+'/'
     hessian_filename = size_pert+'_Hessian.csv'
