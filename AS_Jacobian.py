@@ -41,7 +41,7 @@ def active_subspace_study(gradients,build_samples,build_values,
         asub.utils.plotters.eigenvalues(ss.eigenvalues, e_br=ss.e_br)
         asub.utils.plotters.subspace_errors(ss.sub_br,out_label='errors')
 
-    return ss
+    # return ss
     
     # Define the active subspace to be one-dimensional.
     ss.partition(active_subspace_dim)

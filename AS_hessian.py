@@ -15,13 +15,13 @@ def print_AS_result (ss):
     """
     df = pd.DataFrame(ss.eigenvectors)
     
-    ss.eigenvalues
-    ss.eigenvectors
-    ss.W1
-    ss.W2
-    ss.e_br
-    ss.sub_br
-    ss.partition
+    # ss.eigenvalues
+    # ss.eigenvectors
+    # ss.W1
+    # ss.W2
+    # ss.e_br
+    # ss.sub_br
+    # ss.partition
 #    f = open('stat_table/eigenvectors.txt','w')
 #    f.write(str(df))
     return(df)    
@@ -36,7 +36,7 @@ def active_subspaces_from_hessian(hessian,build_samples,build_values,
     ss=asub.subspaces.Subspaces()
     #ss.compute based on sstype
     ss.compute(df=hessian, sstype=-1, nboot=2000)
-    return ss
+        
     if plot:
         asub.utils.plotters.eigenvalues(ss.eigenvalues, e_br=ss.e_br)
         asub.utils.plotters.subspace_errors(ss.sub_br,out_label='errors')
@@ -73,35 +73,34 @@ def active_subspaces_from_hessian(hessian,build_samples,build_values,
     print 'Abs. response error',np.linalg.norm(predicted_values.squeeze()-test_values.squeeze())/np.sqrt(predicted_values.shape[0])
     print 'Rel. response error',np.linalg.norm(predicted_values.squeeze()-test_values.squeeze())/np.std(test_values)
     
+    return ss
     
-def lynn_study(catchment = 'Hessian-based/Hessian matrix/Gingera/',
-               t_year = '70s', size_pert = '1e-06'):
+def eig_hessian(catchment = 'Hessian-based/Gingera/',
+               t_year = '70s', no_seed='2025', size_pert = '1e-06'):
     
     data_dir = catchment+'/'+t_year+'/seed-2025/'+size_pert+'/'
     hessian_filename = size_pert+'_Hessian.csv'
     hessian_filename = os.path.join(data_dir,hessian_filename)
 
-    with open(hessian_filename) as f:
-        ncols = len(f.readline().split(','))
-        
-    hessian = np.loadtxt(hessian_filename,skiprows=1, usecols=range(0,ncols),delimiter =',')
-    Nsamp = 1000    
-    m = hessian.shape[0]
-    hess_list = np.empty(shape=(Nsamp, m, m))
-    hess_list[:] = np.hsplit(hessian, Nsamp)
+    #read hessian.csv
+    hessian = np.loadtxt(hessian_filename,skiprows=1, delimiter =',')
+    #model dimension
+    Npar = hessian.shape[0]
+    Nsamp = hessian.shape[1]/hessian.shape[0]
+    #convert to 3d array
+    hess_list = np.empty(shape=(Nsamp, Npar, Npar))
+    hess_list[:] = np.hsplit(hessian, 1000)
                          
-    num_vars = m
-    
+        
     build_samples_filename = 'xy.csv'
     build_samples_filename=os.path.join(data_dir,build_samples_filename)
     
 #    data=np.loadtxt(build_samples_filename,skiprows=1,
-#                          usecols=range(1,num_vars+2),delimiter=',')
+#                          usecols=range(1,Npar+2),delimiter=',')
     data=np.loadtxt(build_samples_filename,skiprows=1,delimiter=',')
-    print(data.shape[1])    
-    
+        
     #check size
-    assert data.shape[1] == num_vars+1
+    assert data.shape[1] == Npar+1
     build_samples = data[:,:-1].T
     build_values = data[:,-1]
 
@@ -111,7 +110,7 @@ def lynn_study(catchment = 'Hessian-based/Hessian matrix/Gingera/',
 
     data=np.loadtxt(test_samples_filename,skiprows=1,delimiter=',')
     #check size    
-    assert data.shape[1] == num_vars+1
+    assert data.shape[1] == Npar+1
     test_samples = data[:,:-1].T
     test_values = data[:,-1]
 
@@ -125,7 +124,7 @@ if __name__ == '__main__':
     # set seed
     np.random.seed(3)
     #quadratic_study()
-    lynn_study(catchment = 'Hessian-based//Gingera/constrained-range-1',
+    eig_hessian(catchment = 'Hessian-based/Gingera/constrained-range-1',
                t_year='70s')
     
 
