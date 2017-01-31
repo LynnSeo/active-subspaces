@@ -8,6 +8,8 @@ conduct eigen decomposition based on Hessian
 import sys
 import os 
 import numpy as np
+import active_subspaces as asub
+
 #import pandas as pd
 #import csv
 
@@ -41,11 +43,14 @@ def active_subspace_from_hessian(hessian):
     """
     #compute the matrix
     c_h = hessian[0]
-    
-    for i in xrange(1, len(hessian)):
+
+    nsamp = len(hessian)
+    for i in xrange(1, nsamp):
         c_h += hessian[i]
-        c_h /= len(hessian)
-        return sorted_eigh(c_h)
+
+    c_h /= nsamp
+
+    return c_h, sorted_eigh(c_h)
 
 def eig_hessian(catchment = 'Hessian-based/Gingera/',
                t_year = '70s', no_seed='2025', size_pert = '1e-06'):
@@ -55,9 +60,6 @@ def eig_hessian(catchment = 'Hessian-based/Gingera/',
     hessian_filename = size_pert+'_Hessian.csv'
     hessian_filename = os.path.join(data_dir,hessian_filename)
         
-    with open(hessian_filename) as f:
-            ncols = len(f.readline().split(','))
-    
     #model dimension
     hessian = np.loadtxt(hessian_filename,skiprows=1, delimiter =',')
     m = hessian.shape[0]
@@ -71,7 +73,10 @@ def eig_hessian(catchment = 'Hessian-based/Gingera/',
     #print np.allclose(hess_list[0], hessian[:,0:6])
     
     #eigen decomposition for list of hessians
-    eig_dcomp = active_subspace_from_hessian(hess_list)
+    c_h, eig_dcomp = active_subspace_from_hessian(hess_list)
+    
+    print c_h[3,1]
+
     eig_dcomp = list(eig_dcomp)
     ##print '$$$$$$$$$$$$'
 #    print(eig_dcomp[0])
@@ -81,26 +86,17 @@ def eig_hessian(catchment = 'Hessian-based/Gingera/',
     np.savetxt(os.path.join(data_dir,'eigenvalues.csv'), eig_dcomp[0], delimiter =',')
     np.savetxt(os.path.join(data_dir,'eigenvectors.csv'), eig_dcomp[1], delimiter =',')
 
+    
 #nrow, ncol
 #print ('hessian size=',hessian.shape[0], hessian.shape[1])
 if __name__ == "__main__":
     clear_all()
-    eig_hessian(catchment = 'Hessian-based/Gingera/original-range-1',t_year= '00s',
-                no_seed='2025'),    
+    eig_hessian(catchment = 'Hessian-based/Gingera/constrained-range-1',t_year= '70s',
+                no_seed='2025')
     
-
-               
-
-#x = np.arange(36).reshape(2, 18)
-#print x
-#nrow, ncol = x.shape
-#hsize = ncol / nrow
-#
-#hess_list = np.empty(shape=(9, 2, 2))
-#
-#hess_list[:] = np.hsplit(x, 9)
-#
-#print hess_list
+    # asub.utils.plotters.eigenvalues(ss.eigenvalues, e_br=ss.e_br)
+    # asub.utils.plotters.subspace_errors(ss.sub_br,out_label='errors')
+    
 
 
 
