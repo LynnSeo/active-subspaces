@@ -9,28 +9,29 @@ import os
 import sys
 import pandas as pd
 
-def print_AS_result (ss):
-    """
-    ss = output from subspaces.py
-    """
-    df = pd.DataFrame(ss.eigenvectors)
+# def print_AS_result (ss):
+#     """
+#     ss = output from subspaces.py
+#     """
+#     df = pd.DataFrame(ss.eigenvectors)
     
-    # ss.eigenvalues
-    # ss.eigenvectors
-    # ss.W1
-    # ss.W2
-    # ss.e_br
-    # ss.sub_br
-    # ss.partition
-#    f = open('stat_table/eigenvectors.txt','w')
-#    f.write(str(df))
-    return(df)    
+#     # ss.eigenvalues
+#     # ss.eigenvectors
+#     # ss.W1
+#     # ss.W2
+#     # ss.e_br
+#     # ss.sub_br
+#     # ss.partition
+# #    f = open('stat_table/eigenvectors.txt','w')
+# #    f.write(str(df))
+#     return(df)    
     
 def active_subspaces_from_hessian(hessian,build_samples,build_values,
                                   test_values,test_samples,active_subspaces_dim,
                                   plot=False):
-    sys.path.append('C:/UserData/seol/Sensitivity Analyses/IHACRES/AS/')
     import active_subspaces as asub
+
+    # sys.path.append('C:/UserData/seol/Sensitivity Analyses/IHACRES/AS/')
     
     #initiate subspaces
     ss=asub.subspaces.Subspaces()
