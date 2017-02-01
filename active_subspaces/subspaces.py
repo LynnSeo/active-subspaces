@@ -8,7 +8,7 @@ from gradients import local_linear_gradients
 
 SQRTEPS = np.sqrt(np.finfo(float).eps)
 
-class Subspaces():
+class Subspaces(object):
     """
     A class for computing active and inactive subspaces.
 
