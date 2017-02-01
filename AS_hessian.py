@@ -39,16 +39,9 @@ def active_subspaces_from_hessian(hessian, build_samples, build_values,
     avmap = asub.domains.BoundedActiveVariableMap(avdom)
 
     # Map the build samples into the active subspace
-
-    print '2structure of build_sample', build_samples.shape
-
     active_build_samples = avmap.forward(build_samples)[0].T
 
     # Map the test samples into the active subspace
-    print '2 structure of test_sample', test_samples.shape
-
-    np.savetxt('wtf2.csv', test_samples, delimiter=',')
-
     active_test_samples = avmap.forward(test_samples)[0].T
 
     # Plot the outputs versus the value of the active variables
@@ -113,20 +106,15 @@ def eig_hessian(catchment='Hessian-based/Gingera/',
 
     # check size
     assert data.shape[1] == Npar + 1
-    print data.shape
     test_samples = data[:, :-1]
     test_values = data[:, -1]
-    print '1 structure of build_sample', build_samples.shape
-    print '1 structure of test_sample', test_samples.shape
-    np.savetxt('wtf1.csv', test_samples, delimiter=',')
-
+    
     ss = active_subspaces_from_hessian(hess_list, build_samples, build_values,
-                                       test_samples, test_values, 1, plot=False)
+                                       test_samples, test_values, 1, plot=True)
 
     np.savetxt(os.path.join(data_dir, 'eigenvalues.csv'), ss.eigenvalues, delimiter=',')
     np.savetxt(os.path.join(data_dir, 'eigenvectors.csv'), ss.eigenvectors, delimiter=',')
-
-    print '************'
+    print ss.eigenvalues
     print ss.eigenvectors
 
 if __name__ == '__main__':
