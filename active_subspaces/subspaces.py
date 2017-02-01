@@ -186,11 +186,12 @@ def active_subspace_from_hessian(df):
     """
     df : list of hessian
     """
-    C_H = df[0]
-    for i in xrange(1,len(df)):
-        C_H += df[i]
-    C_H /= len(df)
-    return sorted_eigh(C_H)
+    df, M, m = process_inputs(df)
+
+    # compute the matrix
+    C = df
+
+    return sorted_eigh(C)
 
 def active_subspace(df, weights):
     """
