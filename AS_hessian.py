@@ -9,25 +9,9 @@ import os
 import sys
 import pandas as pd
 
-# def print_AS_result (ss):
-#     """
-#     ss = output from subspaces.py
-#     """
-#     df = pd.DataFrame(ss.eigenvectors)
     
-#     # ss.eigenvalues
-#     # ss.eigenvectors
-#     # ss.W1
-#     # ss.W2
-#     # ss.e_br
-#     # ss.sub_br
-#     # ss.partition
-# #    f = open('stat_table/eigenvectors.txt','w')
-# #    f.write(str(df))
-#     return(df)    
-    
-def active_subspaces_from_hessian(hessian,build_samples,build_values,
-                                  test_values,test_samples,active_subspaces_dim,
+def active_subspaces_from_hessian(hessian, build_samples, build_values,
+                                  test_values, test_samples, active_subspaces_dim,
                                   plot=False):
     import active_subspaces as asub
 
@@ -37,7 +21,7 @@ def active_subspaces_from_hessian(hessian,build_samples,build_values,
     ss=asub.subspaces.Subspaces()
     #ss.compute based on sstype
     ss.compute(df=hessian, sstype=-1, nboot=2000)
-        
+    
     if plot:
         asub.utils.plotters.eigenvalues(ss.eigenvalues, e_br=ss.e_br)
         asub.utils.plotters.subspace_errors(ss.sub_br,out_label='errors')
@@ -53,17 +37,25 @@ def active_subspaces_from_hessian(hessian,build_samples,build_values,
     # Instantiate a map between the active variables and the original
     # variables
     avmap = asub.domains.BoundedActiveVariableMap(avdom)
-
+    
     # Map the build samples into the active subspace
-    active_build_samples = avmap.forward(build_samples.T)[0].T
-
+    
+    print '2structure of build_sample', build_samples.shape
+       
+    active_build_samples = avmap.forward(build_samples)[0].T
+    
     # Map the test samples into the active subspace
-    active_test_samples = avmap.forward(test_samples.T)[0].T
-
+    print '2 structure of test_sample', test_samples.shape
+    
+    np.savetxt('wtf2.csv', test_samples, delimiter =',')
+    
+    active_test_samples = avmap.forward(test_samples)[0].T
+    
     # Plot the outputs versus the value of the active variables
     if plot:
         asub.utils.plotters.sufficient_summary(active_test_samples.T,
                                                test_values)
+
 
     # Instantiate a PolynomialApproximation object of degree 2
     pr = asub.utils.response_surfaces.PolynomialApproximation(N=2)
@@ -85,40 +77,58 @@ def eig_hessian(catchment = 'Hessian-based/Gingera/',
 
     #read hessian.csv
     hessian = np.loadtxt(hessian_filename,skiprows=1, delimiter =',')
-    #model dimension
+    #model dimension : it's opposite to Jacobian-based
     Npar = hessian.shape[0]
     Nsamp = hessian.shape[1]/hessian.shape[0]
+    
     #convert to 3d array
     hess_list = np.empty(shape=(Nsamp, Npar, Npar))
-    hess_list[:] = np.hsplit(hessian, 1000)
-                         
-        
+    hess_list[:] = np.hsplit(hessian, Nsamp)
+
+    c_h = hess_list[0]
+
+    for i in xrange(1, Nsamp):
+        c_h += hess_list[i]
+
+    c_h /= Nsamp 
+    #average of Hessians
+    hess_list = c_h 
+
+    #read coordinates
     build_samples_filename = 'xy.csv'
-    build_samples_filename=os.path.join(data_dir,build_samples_filename)
-    
-#    data=np.loadtxt(build_samples_filename,skiprows=1,
-#                          usecols=range(1,Npar+2),delimiter=',')
+    build_samples_filename = os.path.join(data_dir,build_samples_filename)
     data=np.loadtxt(build_samples_filename,skiprows=1,delimiter=',')
-        
+    
+
     #check size
     assert data.shape[1] == Npar+1
-    build_samples = data[:,:-1].T
+    build_samples = data[:,:-1]
     build_values = data[:,-1]
+    # print 'structure of build_sample', len(build_samples.shape)
+    # print build_samples.shape
 
     test_samples_filename = 'xy.csv'
     test_data_dir = catchment+'/'+t_year+'/seed-2026/'+size_pert+'/'
-    test_samples_filename=os.path.join(test_data_dir,test_samples_filename)
-
+    test_samples_filename = os.path.join(test_data_dir,test_samples_filename)
     data=np.loadtxt(test_samples_filename,skiprows=1,delimiter=',')
+
     #check size    
     assert data.shape[1] == Npar+1
-    test_samples = data[:,:-1].T
+    print data.shape
+    test_samples = data[:,:-1]
     test_values = data[:,-1]
+    print '1 structure of build_sample', build_samples.shape
+    print '1 structure of test_sample', test_samples.shape
+    np.savetxt('wtf1.csv', test_samples, delimiter =',')
 
-    ss = active_subspaces_from_hessian(hess_list,build_samples,build_values,
-                          test_samples,test_values,2,plot=False)
+    ss = active_subspaces_from_hessian(hess_list, build_samples, build_values,
+                          test_samples, test_values, 1, plot=False)
+
     np.savetxt(os.path.join(data_dir,'eigenvalues.csv'), ss.eigenvalues, delimiter =',')
     np.savetxt(os.path.join(data_dir,'eigenvectors.csv'), ss.eigenvectors, delimiter =',')
+
+    print '************'
+    print ss.eigenvectors
 
 if __name__ == '__main__':
     
