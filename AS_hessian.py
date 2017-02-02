@@ -110,7 +110,7 @@ def eig_hessian(catchment='Hessian-based/Gingera/',
     test_values = data[:, -1]
     
     ss = active_subspaces_from_hessian(hess_list, build_samples, build_values,
-                                       test_samples, test_values, 1, plot=True)
+                                       test_samples, test_values, 1, plot=False)
 
     np.savetxt(os.path.join(data_dir, 'eigenvalues.csv'), ss.eigenvalues, delimiter=',')
     np.savetxt(os.path.join(data_dir, 'eigenvectors.csv'), ss.eigenvectors, delimiter=',')
