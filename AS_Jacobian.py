@@ -73,12 +73,13 @@ def active_subspace_study(gradients,build_samples,build_values,
     predicted_values = pr.predict(active_test_samples.T)[0]
     print 'Abs. response error',np.linalg.norm(predicted_values.squeeze()-test_values.squeeze())/np.sqrt(predicted_values.shape[0])
     print 'Rel. response error',np.linalg.norm(predicted_values.squeeze()-test_values.squeeze())/np.std(test_values)
+    return (ss)
 
 def quadratic_study():
     # total number of random variables
-    num_vars = 10
+    num_vars = 6
     # dimension of active subspace
-    rank = 2
+    rank = 3
     # Generate a matrix with normally distributed entries
     Amatrix = np.random.normal(0,1,(num_vars,num_vars))
     # Make A symmetric positive definite
@@ -111,7 +112,6 @@ def quadratic_study():
         if x.ndim==1:
             x = x.reshape((x.shape[0],1))
         return np.dot(Amatrix,x)
-
 
     num_build_samples=100
     build_samples=np.random.uniform(-1.,1.,(num_vars,num_build_samples))
@@ -168,18 +168,17 @@ def lynn_study(catchment = 'Jacobian-based/Gingera/Constrained range',
     ss = active_subspace_study(gradients,build_samples,build_values,
                           test_samples,test_values,2,plot=False)
     
-    
     np.savetxt(os.path.join(data_dir,'eigenvalues.csv'), ss.eigenvalues, delimiter =',')
     np.savetxt(os.path.join(data_dir,'eigenvectors.csv'), ss.eigenvectors, delimiter =',')
-#    np.savetxt(os.path.join(data_dir,'W1.csv'), ss.W1, delimiter =',')
-    
-    
+    # np.savetxt(os.path.join(data_dir,'e_br.csv'), ss.e_br, delimiter =',')
+    # np.savetxt(os.path.join(data_dir,'sub_br.csv'), ss.sub_br, delimiter =',')
+        
 if __name__ == '__main__':
     clear_all()
     # set seed
     np.random.seed(3)
     #quadratic_study()
-    lynn_study(catchment = 'Jacobian-based/Gingera/constrained-range-1',
-               t_year = '00s',size_pert = '1e-06')
+    lynn_study(catchment = 'Jacobian-Hessian/Gingera/1000-samples',
+               t_year = '70s',size_pert = '1e-04')
     
     

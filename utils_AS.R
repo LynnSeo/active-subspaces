@@ -15,7 +15,7 @@ load_tsPQE <- function(t_catchment='Gingera', t_year='70s'){
 
 #compute Jacobian and Hessian using finite differencing
 est_J_H <- function (t_catchment = 'Gingera', t_year = '70s',
-                     sub_catchment = 'test1', no_seed = 2025, perts = '1e-04', Nsamp=10){
+                     sub_catchment = '1sample', no_seed = 2025, perts = '1e-04', Nsamp=1, method='random'){
   
   ts_t_year = load_tsPQE(t_catchment = t_catchment, t_year=t_year)
   #set up obj function
@@ -40,7 +40,7 @@ est_J_H <- function (t_catchment = 'Gingera', t_year = '70s',
   
   # getFreeParsRanges(obj1)*scale_perts
   #generate random numbers on uniform distribution
-  x0 = parameterSets(obj1$parlist,Nsamp,method='random'); set.seed(no_seed)
+  x0 = parameterSets(obj1$parlist,Nsamp,method=method); set.seed(no_seed)
   x1 = as.data.frame(t(apply(x0, 1, function (x) x +  df_pert )))
   x2 = as.data.frame(t(apply(x0, 1, function (x) x -  df_pert )))
   Npar = length(names(x0))
@@ -49,7 +49,7 @@ est_J_H <- function (t_catchment = 'Gingera', t_year = '70s',
   colnames(x2) <- par_list
   
   #return jacobian and hessian
-  j_h_deriv <- function (Nsamp, x0=x0, x1=x1, x2=x2){
+  j_h_deriv <- function (Nsamp, Npar, x0=x0, x1=x1, x2=x2){
     #x0 = x, x1 = x+h, x2 = x-h
     Jaco_mat = as.data.frame(matrix(NaN, Nsamp, Npar))
     time_taken = proc.time()
@@ -92,30 +92,33 @@ est_J_H <- function (t_catchment = 'Gingera', t_year = '70s',
       }
       
       if (k==1){Hess_mat=temp_h
-      }else{Hess_mat = rbind(Hess_mat, temp_h)}
+      u0=u[4]
+      }else{Hess_mat = rbind(Hess_mat, temp_h)
+      u0=rbind(u0,u[4])
+      }
       
     }
     time_taken2 = proc.time()- time_taken
     print (time_taken2)
-    derivs = list(jacobian=Jaco_mat, hessian=Hess_mat)
+    
+    derivs = list(jacobian=Jaco_mat, hessian=Hess_mat,u0=u0)
     return(derivs)
   }
   
-  
-  ls_jh = j_h_deriv(Nsamp = Nsamp, x0=x0, x1=x1, x2=x2)
+  ls_jh = j_h_deriv(Nsamp = Nsamp, Npar=Npar, x0=x0, x1=x1, x2=x2)
   
   #generate dir : Gingera/70s/seed-2025/1e-06
-  name_dir_path = str_c('Jacobian_Hessian/',t_catchment,'/',sub_catchment,'/',t_year,'/','seed-',no_seed,'/',perts,'/')
+  name_dir_path = str_c('Jacobian-Hessian/',t_catchment,'/',sub_catchment,'/',t_year,'/','seed-',no_seed,'/',perts,'/')
   dir.create(name_dir_path,recursive = TRUE, showWarnings = F)
   
   #print parameter range
-  sink(str_c('Jacobian_Hessian/',t_catchment,'/',sub_catchment,'/parameter_range.txt'))
+  sink(str_c('Jacobian-Hessian/',t_catchment,'/',sub_catchment,'/parameter_range.txt'))
   print(paste('Nsamp =',Nsamp))
   print(obj1)
   sink()
   
-  u0 = evalPars(x0, obj1)
-  xy=as.data.frame(cbind(x0,u0))
+  xy=as.data.frame(cbind(x0,ls_jh$u0, row.names=NULL))
+  
   xy$shape = NULL
   
   write.csv(xy,str_c(name_dir_path,'xy.csv'),row.names = FALSE)
@@ -127,7 +130,7 @@ est_J_H <- function (t_catchment = 'Gingera', t_year = '70s',
 }
 
 plot_eigen = function (t_catchment = 'Jacobiand-Hessian/Gingera', sub_catchment='test1',
-                                     t_year = '70s',no_seed = 2025,perts = '1e-04'  ){
+                                     t_year = '70s',no_seed = 2025,perts = '1e-04' ,additional_dir='' ){
   # prim_dir='C:/UserData/seol/Sensitivity Analyses/IHACRES/AS/'
   # sub_dir = 'Jacobian-based'
   # t_catchment = 'Gingera'
@@ -135,8 +138,7 @@ plot_eigen = function (t_catchment = 'Jacobiand-Hessian/Gingera', sub_catchment=
   # no_seed = 2025
   # perts = 1e-06
   
-  
-  ndir = str_c(t_catchment,'/',sub_catchment,'/',t_year,'/seed-',no_seed,'/',perts,'/')
+  ndir = str_c(t_catchment,'/',sub_catchment,'/',t_year,'/seed-',no_seed,'/',perts,'/',additional_dir)
   
   #read eigenvectors
   eigen_values = read.csv(str_c(ndir,'eigenvalues.csv'),header=F)
@@ -195,8 +197,9 @@ plot_eigen = function (t_catchment = 'Jacobiand-Hessian/Gingera', sub_catchment=
 # high-dimensioanl linear fitting used
 # g(y) =a W1T X
 construct_RSM = function (t_catchment = 'Jacobian-Hessian/Gingera', sub_catchment='test1',
-                          t_year = '70s', no_seed = 2025, perts = '1e-04', seperation.n = 3, plot=FALSE){
-  ndir = str_c(t_catchment,'/',sub_catchment,'/',t_year,'/seed-',no_seed,'/',perts,'/')
+                          t_year = '70s', no_seed = 2025, perts = '1e-04', seperation.n = 3, plot=FALSE,
+                          additional_dir=''){
+  ndir = str_c(t_catchment,'/',sub_catchment,'/',t_year,'/seed-',no_seed,'/',perts,'/',additional_dir)
   #read coordinates
   xy = read.csv(str_c(ndir,'xy.csv'))
   #delete the list of ids 
@@ -269,7 +272,7 @@ construct_RSM = function (t_catchment = 'Jacobian-Hessian/Gingera', sub_catchmen
   head(matrix_plot)
   
   matrix_plot=as.data.frame(matrix_plot)
-  library(gridExtra)
+  
   
   #plotting options
   range.ylim = c(-0.5,2)
@@ -311,7 +314,7 @@ construct_RSM = function (t_catchment = 'Jacobian-Hessian/Gingera', sub_catchmen
   if (isTRUE(plot)){
     
     dir.create(str_c(ndir,'figs'),recursive = TRUE, showWarnings = F)
-    para.array = c('f','e','d','tau_q','tau_s','v_s','y1','y2','y3')
+    para.array = c('f','e','d','tau_q','tau_s','v_s','y1','y2','y3')[1:(m+seperation.n)]
     for (i in para.array){
       plot_original_para(i)
     }

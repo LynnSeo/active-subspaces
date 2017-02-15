@@ -86,6 +86,8 @@ def eig_hessian(catchment='Hessian-based/Gingera/',
     c_h /= Nsamp
     # average of Hessians
     hess_list = c_h
+    print hess_list
+    np.savetxt('ave_hess.csv', hess_list, delimiter=',')
 
     # read coordinates
     build_samples_filename = 'xy.csv'
@@ -110,10 +112,10 @@ def eig_hessian(catchment='Hessian-based/Gingera/',
     test_values = data[:, -1]
     
     ss = active_subspaces_from_hessian(hess_list, build_samples, build_values,
-                                       test_samples, test_values, 1, plot=False)
+                                       test_samples, test_values, 1)
 
-    np.savetxt(os.path.join(data_dir, 'eigenvalues.csv'), ss.eigenvalues, delimiter=',')
-    np.savetxt(os.path.join(data_dir, 'eigenvectors.csv'), ss.eigenvectors, delimiter=',')
+    np.savetxt(os.path.join(data_dir+'hess/', 'eigenvalues.csv'), ss.eigenvalues, delimiter=',')
+    np.savetxt(os.path.join(data_dir+'hess/', 'eigenvectors.csv'), ss.eigenvectors, delimiter=',')
     print ss.eigenvalues
     print ss.eigenvectors
 
@@ -122,5 +124,5 @@ if __name__ == '__main__':
     # set seed
     np.random.seed(3)
     # quadratic_study()
-    eig_hessian(catchment='Hessian-based/Gingera/constrained-range-1',
+    eig_hessian(catchment='Jacobian-Hessian/Gingera/500-samples', size_pert='1e-04',
                 t_year='70s')
